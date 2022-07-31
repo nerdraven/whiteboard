@@ -3,26 +3,57 @@ class Box {
     public readonly posX: number,
     public readonly posY: number,
     public readonly width: number,
-    public readonly height: number
+    public readonly height: number,
+    public readonly color: string
   ) {}
+}
+
+class ImageItem {
+  constructor(public readonly image: HTMLImageElement) {}
+}
+
+type Item = Box | ImageItem;
+
+function isBox(item: Box | ImageItem): item is Box {
+  return (<Box>item).posX !== undefined;
+}
+
+function* getRandomColor(): Generator<string, string, string> {
+  let currentNumber = 0;
+  const googColors = ["blue", "red", "yellow", "green"];
+  while (true) {
+    currentNumber++;
+    yield googColors[currentNumber % googColors.length];
+  }
 }
 
 class Canvas {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
 
-  private readonly boxes: Array<Box> = [];
-  private currentBox: Box | undefined = undefined;
+  private readonly boxes: Array<Item> = [];
+  private currentBox: Item | undefined = undefined;
 
   private xstartPosition: number = 0;
   private ystartPosition: number = 0;
 
   private canDraw: boolean = false;
+  private currentColor: string | undefined = undefined;
+  private colorGenerator: Generator<string, string, string> = getRandomColor();
 
   constructor(element: HTMLCanvasElement, width: number, height: number) {
     this.canvas = element;
     this.ctx = element.getContext("2d")!;
     this.setupSize(width, height);
+  }
+
+  public setPicture(path: string): void {
+    const image = new Image(10, 10);
+    image.src = path;
+    this.boxes.push(new ImageItem(image));
+    image.onload = () => {
+      this.refresh();
+    };
   }
 
   private setupSize(width: number, height: number): void {
@@ -38,9 +69,13 @@ class Canvas {
     this.setupPen();
   }
 
+  public setColor(color: string): void {
+    this.ctx.strokeStyle = color;
+    this.currentColor = color;
+  }
+
   private setupPen() {
     this.ctx.lineCap = "butt";
-    this.ctx.strokeStyle = "red";
     this.ctx.lineWidth = 3;
   }
 
@@ -60,6 +95,7 @@ class Canvas {
       this.boxes.push(this.currentBox);
       this.currentBox = undefined;
     }
+    this.currentColor = undefined;
   }
 
   private onMouseDown(e: MouseEvent): void {
@@ -71,7 +107,20 @@ class Canvas {
   private refresh(): void {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     for (const box of this.boxes) {
-      this.ctx.strokeRect(box.posX, box.posY, box.width, box.height);
+      if (isBox(box)) {
+        const previousColor = this.currentColor!;
+        this.setColor(box.color);
+        this.ctx.strokeRect(box.posX, box.posY, box.width, box.height);
+        this.setColor(previousColor);
+      } else {
+        this.ctx.drawImage(
+          box.image,
+          0,
+          0,
+          this.canvas.width,
+          this.canvas.height
+        );
+      }
     }
   }
 
@@ -82,6 +131,10 @@ class Canvas {
   private drawRectangle(e: MouseEvent): void {
     if (!this.canDraw) return;
     this.refresh();
+
+    if (typeof this.currentColor === "undefined") {
+      this.setColor(this.colorGenerator.next().value);
+    }
 
     const width = e.clientX - this.xstartPosition - this.xCorrection;
     const height = e.clientY - this.ystartPosition - this.yCorrection;
@@ -97,7 +150,8 @@ class Canvas {
       this.xstartPosition,
       this.ystartPosition,
       width,
-      height
+      height,
+      this.currentColor!
     );
   }
 }
@@ -111,6 +165,7 @@ function Main(): void {
 
   window.canvas = new Canvas(elem, width, height);
   window.canvas.setup();
+  window.canvas.setPicture("./static/picture.jpg");
 }
 
 window.addEventListener("load", Main);
