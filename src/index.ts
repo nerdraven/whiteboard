@@ -178,16 +178,36 @@ class Canvas {
 function Main(): void {
   const width = window.innerWidth - 9;
   const height = window.innerHeight - 9;
-  const elem: HTMLCanvasElement = document.createElement("canvas");
-  elem.id = "canvas";
-  document.body.appendChild(elem);
 
-  window.canvas = new Canvas(elem, width, height);
+  const container: HTMLDivElement = document.createElement("div");
+  const canvas: HTMLCanvasElement = document.createElement("canvas");
+  container.appendChild(canvas);
+
+  canvas.id = "canvas";
+  container.style.position = "relative";
+  canvas.style.position = "absolute";
+
+  document.body.appendChild(container);
+
+  window.canvas = new Canvas(canvas, width, height);
   window.canvas.setup();
   window.canvas.setPicture("./static/picture.jpg");
   window.canvas.addSaveListener((box) => {
+    addOverlay(box.posX, box.posY, box.color, container);
     return true;
   })
+}
+
+function addOverlay(posX: number, posY: number, color: string, container: HTMLDivElement): void {
+  const overlay = document.createElement("div");
+  overlay.style.position = "absolute";
+  overlay.className = "overlay";
+  overlay.style.top = `${posY}px`
+  overlay.style.left = `${posX}px`;
+  overlay.style.width = "100px";
+  overlay.style.height = "100px";
+  overlay.style.backgroundColor = color;
+  container.appendChild(overlay);
 }
 
 window.addEventListener("load", Main);
