@@ -5,6 +5,6 @@
     "node_modules",
     "**/static/*"
   ],
-  "exec": "npm start",
+  "exec": "npm compile",
   "ext": "ts"
 }
