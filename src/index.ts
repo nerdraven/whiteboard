@@ -41,6 +41,8 @@ class Canvas {
   private currentColor: string | undefined = undefined;
   private colorGenerator: Generator<string, string, string> = getRandomColor();
 
+  private saveCallbacks: Array<(box: Box) => boolean> = [];
+
   constructor(element: HTMLCanvasElement, width: number, height: number) {
     this.canvas = element;
     this.ctx = element.getContext("2d")!;
@@ -87,14 +89,31 @@ class Canvas {
     return this.canvas.getBoundingClientRect().top;
   }
 
-  private onMouseUp(e: MouseEvent): void {
-    this.canDraw = false;
-    this.xstartPosition = Infinity;
-    this.ystartPosition = Infinity;
+  private saveCurrentBox(): void {
+    for (const callback of this.saveCallbacks) {
+      try {
+        const res = callback(<Box>this.currentBox);
+        if(!res) return;
+      } catch (error) {
+        console.log(error);
+        return;
+      }
+    }
     if (typeof this.currentBox !== "undefined") {
       this.boxes.push(this.currentBox);
       this.currentBox = undefined;
     }
+  }
+
+  public addSaveListener(callback: (box: Box) => boolean): void {
+    this.saveCallbacks.push(callback);
+  }
+
+  private onMouseUp(e: MouseEvent): void {
+    this.canDraw = false;
+    this.xstartPosition = Infinity;
+    this.ystartPosition = Infinity;
+    this.saveCurrentBox();
     this.currentColor = undefined;
   }
 
@@ -166,6 +185,9 @@ function Main(): void {
   window.canvas = new Canvas(elem, width, height);
   window.canvas.setup();
   window.canvas.setPicture("./static/picture.jpg");
+  window.canvas.addSaveListener((box) => {
+    return true;
+  })
 }
 
 window.addEventListener("load", Main);
