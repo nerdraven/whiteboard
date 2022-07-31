@@ -1,6 +1,18 @@
+class Box {
+  constructor(
+    public readonly posX: number,
+    public readonly posY: number,
+    public readonly width: number,
+    public readonly height: number
+  ) {}
+}
+
 class Canvas {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
+
+  private readonly boxes: Array<Box> = [];
+  private currentBox: Box | undefined = undefined;
 
   private xstartPosition: number = 0;
   private ystartPosition: number = 0;
@@ -12,7 +24,7 @@ class Canvas {
     this.ctx = element.getContext("2d")!;
     this.setupSize(width, height);
   }
-  
+
   private setupSize(width: number, height: number): void {
     this.canvas.width = width;
     this.canvas.height = height;
@@ -29,7 +41,7 @@ class Canvas {
   private setupPen() {
     this.ctx.lineCap = "butt";
     this.ctx.strokeStyle = "red";
-    this.ctx.lineWidth = 5;
+    this.ctx.lineWidth = 3;
   }
 
   private get xCorrection(): number {
@@ -44,6 +56,10 @@ class Canvas {
     this.canDraw = false;
     this.xstartPosition = Infinity;
     this.ystartPosition = Infinity;
+    if (typeof this.currentBox !== "undefined") {
+      this.boxes.push(this.currentBox);
+      this.currentBox = undefined;
+    }
   }
 
   private onMouseDown(e: MouseEvent): void {
@@ -54,6 +70,9 @@ class Canvas {
 
   private refresh(): void {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    for (const box of this.boxes) {
+      this.ctx.strokeRect(box.posX, box.posY, box.width, box.height);
+    }
   }
 
   private onDraw(e: MouseEvent): void {
@@ -73,18 +92,25 @@ class Canvas {
       width,
       height
     );
+
+    this.currentBox = new Box(
+      this.xstartPosition,
+      this.ystartPosition,
+      width,
+      height
+    );
   }
 }
 
 function Main(): void {
-  const width = window.outerWidth - 100;
-  const height = window.outerHeight - 100;
+  const width = window.innerWidth - 9;
+  const height = window.innerHeight - 9;
   const elem: HTMLCanvasElement = document.createElement("canvas");
+  elem.id = "canvas";
   document.body.appendChild(elem);
 
-
-  const canvas = new Canvas(elem, width, height);
-  canvas.setup();
+  window.canvas = new Canvas(elem, width, height);
+  window.canvas.setup();
 }
 
 window.addEventListener("load", Main);

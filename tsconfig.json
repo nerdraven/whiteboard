@@ -3,6 +3,9 @@
     "./src",
   ],
   "compilerOptions": {
+    "types": [
+      "./src/types/"
+    ],
     "outDir": "./dist/",
     "rootDirs": [
       "./src",
