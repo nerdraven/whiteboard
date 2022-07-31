@@ -1,0 +1,31 @@
+{
+  "include": [
+    "./src",
+  ],
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "rootDirs": [
+      "./src",
+      // Ensure that the relative paths in types produced by bazel get turned into
+    ],
+    "module": "CommonJS",
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "preserveConstEnums": true,
+    "strict": true,
+    "removeComments": true,
+    "target": "ES6",
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "lib": [
+      "ES2015",
+      "dom"
+    ],
+    "allowSyntheticDefaultImports": false,
+    "esModuleInterop": false
+  },
+  "exclude": [
+    "bazel-*",
+    "node_modules"
+  ]
+}
