@@ -193,7 +193,9 @@ function Main(): void {
   window.canvas.setup();
   window.canvas.setPicture("./static/picture.jpg");
   window.canvas.addSaveListener((box) => {
-    addOverlay(box.posX, box.posY, box.color, container);
+    const width = box.posX + Math.ceil(box.width / 2);
+    const height = box.posY + Math.ceil(box.height / 2);
+    addOverlay(width, height, box.color, container);
     return true;
   })
 }
@@ -202,8 +204,8 @@ function addOverlay(posX: number, posY: number, color: string, container: HTMLDi
   const overlay = document.createElement("div");
   overlay.style.position = "absolute";
   overlay.className = "overlay";
-  overlay.style.top = `${posY}px`
-  overlay.style.left = `${posX}px`;
+  overlay.style.top = `${posY - 50}px`
+  overlay.style.left = `${posX - 50}px`;
   overlay.style.width = "100px";
   overlay.style.height = "100px";
   overlay.style.backgroundColor = color;
