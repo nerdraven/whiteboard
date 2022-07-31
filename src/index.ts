@@ -49,26 +49,17 @@ class Canvas {
     this.setupSize(width, height);
   }
 
-  public setPicture(path: string): void {
-    const image = new Image(10, 10);
-    image.src = path;
-    this.boxes.push(new ImageItem(image));
-    image.onload = () => {
-      this.refresh();
-    };
-  }
-
-  private setupSize(width: number, height: number): void {
-    this.canvas.width = width;
-    this.canvas.height = height;
-  }
-
   public setup() {
     this.canvas.addEventListener("mouseup", (e) => this.onMouseUp(e));
     this.canvas.addEventListener("mousedown", (e) => this.onMouseDown(e));
     this.canvas.addEventListener("mousemove", (e) => this.onDraw(e));
     console.log("Mounted canvas");
     this.setupPen();
+  }
+
+  private setupSize(width: number, height: number): void {
+    this.canvas.width = width;
+    this.canvas.height = height;
   }
 
   public setColor(color: string): void {
@@ -81,19 +72,48 @@ class Canvas {
     this.ctx.lineWidth = 3;
   }
 
+  public setPicture(path: string): void {
+    const image = new Image(10, 10);
+    image.src = path;
+    this.boxes.push(new ImageItem(image));
+    image.onload = () => {
+      this.refresh();
+    };
+  }
+
+  /**
+   * This gives the number of pixels from the left
+   * that the canvas element is located.
+   */
   private get xCorrection(): number {
     return this.canvas.getBoundingClientRect().left;
   }
 
+  /**
+   * This gives the number of pixels from the top
+   * that the canvas element is located.
+   */
   private get yCorrection(): number {
     return this.canvas.getBoundingClientRect().top;
   }
 
+  /**
+   * Adds a callback to be called before saving a drawn box
+   * @param callback 
+   */
+  public addSaveCallback(callback: (box: Box) => boolean): void {
+    this.saveCallbacks.push(callback);
+  }
+
+  /**
+   * Saves the currently drawn box to the canvas state
+   * after all registered callbacks returns true.
+   */
   private saveCurrentBox(): void {
     for (const callback of this.saveCallbacks) {
       try {
         const res = callback(<Box>this.currentBox);
-        if(!res) return;
+        if (!res) return;
       } catch (error) {
         console.log(error);
         return;
@@ -103,10 +123,6 @@ class Canvas {
       this.boxes.push(this.currentBox);
       this.currentBox = undefined;
     }
-  }
-
-  public addSaveListener(callback: (box: Box) => boolean): void {
-    this.saveCallbacks.push(callback);
   }
 
   private onMouseUp(e: MouseEvent): void {
@@ -192,7 +208,7 @@ function Main(): void {
   window.canvas = new Canvas(canvas, width, height);
   window.canvas.setup();
   window.canvas.setPicture("./static/picture.jpg");
-  window.canvas.addSaveListener((box) => {
+  window.canvas.addSaveCallback((box) => {
     const width = box.posX + Math.ceil(box.width / 2);
     const height = box.posY + Math.ceil(box.height / 2);
     addOverlay(width, height, box.color, container);
